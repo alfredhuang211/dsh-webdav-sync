@@ -1,0 +1,11 @@
+# dsh-webdav-sync bundle patch —— 把插件挂进 profile
+#
+# 装载一行 host 插件条目。
+#   id   = profile 条目 id，同时也是设置命名空间（设置页就是按它归档的）
+#   name = 模块标识符，按 profile 目录解析（装成 npm 包后就是包名）
+#
+# 所有用户可改字段都带 schema 默认值，所以这里不需要写 config；
+# 用户在设置页的改动会被宿主写回 profile 的 cordis.patch.yml。
+- insert:
+    - id: webdav-sync
+      name: 'dsh-webdav-sync'

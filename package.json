@@ -1,0 +1,61 @@
+{
+  "name": "dsh-webdav-sync",
+  "version": "0.2.1",
+  "description": "DeepSeek Harness 插件：把会话日志备份到任意 WebDAV 服务，并可从 WebDAV 恢复。",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "webdav",
+    "backup",
+    "sync",
+    "session"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alfredhuang211/dsh-webdav-sync.git"
+  },
+  "homepage": "https://github.com/alfredhuang211/dsh-webdav-sync#readme",
+  "bugs": {
+    "url": "https://github.com/alfredhuang211/dsh-webdav-sync/issues"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/bundle.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.0-rc.1 <0.3.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib",
+    "client",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.4",
+    "@deepseek-ai/dsh": ">=0.2.0-rc.1 <0.3.0",
+    "@deepseek-ai/dsh-settings": ">=0.2.0-rc.1 <0.3.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/schemastery": "~3.18.4"
+  }
+}

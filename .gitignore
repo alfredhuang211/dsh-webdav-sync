@@ -1,0 +1,19 @@
+# 依赖与产物
+node_modules/
+*.tgz
+.pnpm-store/
+
+# 本地沙箱 / 调试（不随源码分发）
+.dsh-dev/
+*.log
+.chrome-*/
+
+# 同步过程中可能落下的副本/备份（见 README「冲突处理」）
+*.conflict-*
+*.bak-*
+*.tmp
+
+# 编辑器 / 系统
+.DS_Store
+.idea/
+.vscode/
