@@ -2,7 +2,7 @@
 
 把 DSH 的**会话日志**和**插件环境**同步到任意 WebDAV 服务，带版本号 / 时间 / 设备溯源，可增量备份与恢复。零运行时依赖（Node 内置 `zstd` + `fetch`），host + 客户端两半齐全，Desktop 与 CLI 都能用。
 
-> 仓库内的参考实现（v0.2.1），已在真实 `dsh` 0.2.0-rc.1 的 web profile 上跑通双源同步、版本溯源、冲突处理与强制恢复。
+> 仓库内的参考实现（v0.2.2），已在真实 `dsh` 0.2.0-rc.1 的 web profile 上跑通双源同步、版本溯源、冲突处理与强制恢复。
 
 ## 它同步什么
 
@@ -66,13 +66,13 @@
 
 按钮：保存 / 状态/版本 / 测试连接 / 预演 / 立即备份 / 从云端恢复 / 以云端为准 / 安装依赖。
 
-命令行也可用：`/webdav-sync push|pull|plan|status|test|install`（`pull force` = 以云端为准）。
+本插件**不注册斜杠命令**，因此会话窗口的 `+` / `/` 菜单里不会出现 `webdav-sync` 入口（DSH 会自动列出所有已注册的宿主命令，注册即曝光）。界面之外要用，走下面的同源 HTTP 路由或 `curl`。
 
 ## 环境恢复后的最后一步
 
 恢复 `package.json` / `pnpm-lock.yaml` 之后需要重装依赖：
 
-- 界面上点「安装依赖」，或命令 `/webdav-sync install`；
+- 界面上点「安装依赖」（等价于 `POST /webdav-sync/install`）；
 - 它调用 `ctx.profileContext.packageManager`（打包版用内置 pnpm、开发版用 PATH 里的 pnpm），在 profile 目录里执行 `install`；
 - 等价手工命令：`cd $DSH_HOME/profiles/<profile> && pnpm install`。
 
@@ -83,12 +83,12 @@ pnpm install   # 只为 @deepseek-ai/schemastery
 node --test test/*.test.mjs
 ```
 
-42 个用例：版本排序与三方比较矩阵、WebDAV 客户端路径与建目录（含 basePath 非空）、全新 state 面对已有云端的 base 落下、`nextRev`、v1 清单兼容、环境发现与清单版本、自指剥离、冲突各策略、双源端到端、force 恢复、恢复后收敛性（不抖动）、运行中会话跳过、鉴权失败。
+43 个用例：版本排序与三方比较矩阵、WebDAV 客户端路径与建目录（含 basePath 非空）、全新 state 面对已有云端的 base 落下、`nextRev`、v1 清单兼容、环境发现与清单版本、自指剥离、冲突各策略、双源端到端、force 恢复、恢复后收敛性（不抖动）、运行中会话跳过、鉴权失败。
 
 ## 目录结构
 
 ```
-lib/index.js       入口：name/inject/Config/apply；接 profileContext、路由、命令、定时器、依赖安装
+lib/index.js       入口：name/inject/Config/apply；接 profileContext、路由、定时器、依赖安装
 lib/config.js      schemastery Config（.volatile() 子树决定哪些字段可被设置页写回）+ 到引擎配置的映射
 lib/versioning.js  版本机制核心：compareVersion / decide（三方比较）/ nextRev / manifest v1→v2 归一化
 lib/state.js       本机状态：设备 ID、base 三方基准、sha1 缓存
@@ -98,7 +98,7 @@ lib/webdav.js      零依赖 WebDAV 客户端（Basic / MKCOL / PUT / GET / PROP
 lib/sync.js        同步引擎：双源、manifest v2、冲突副本、原子写、force 恢复
 lib/routes.js      同源 HTTP 路由（首行过 ctx.connection.requestRejection 信任栅栏）
 client/bundle.js   浏览器半边：window.__ModuleLoader__ 自注册 + settings.section 表单
-test/              42 个用例
+test/              43 个用例
 ```
 
 ## 安装
