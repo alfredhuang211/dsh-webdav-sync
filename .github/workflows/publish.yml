@@ -107,7 +107,11 @@ jobs:
           # npm registers the version before its tarball is servable (observed:
           # 1.5–6 minutes). Poll until the artifact downloads, because that HTTP
           # status is what consumers actually hit.
-          for attempt in $(seq 1 40); do
+          # Measured on a sibling package: the version appears in dist-tags well
+          # before the tarball does, and the gap can reach several minutes. A
+          # short window makes a successful publish look like a failure, so this
+          # waits up to 30 minutes.
+          for attempt in $(seq 1 120); do
             code="$(curl -s -o /dev/null -w '%{http_code}' \
               "https://registry.npmjs.org/${name}/-/${base}-${version}.tgz" || true)"
             if [ "$code" = "200" ]; then
