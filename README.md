@@ -117,4 +117,13 @@ dsh plugin --profile web add github:alfredhuang211/dsh-webdav-sync
 
 源码：<https://github.com/alfredhuang211/dsh-webdav-sync>（MIT）
 
-开发指引与踩坑记录另见上层文档《DSH插件开发指南-WebDAV会话同步.md》，本仓库只放插件本身。
+## 开发与发布
+
+开发、测试、发版和排错步骤见 **[DEVELOPMENT.md](DEVELOPMENT.md)**：
+
+```bash
+npm ci && npm test                    # 测试
+npm pack --dry-run                    # 发布前检查产物
+```
+
+发布由 GitHub Actions 在打 `v*` 标签时通过 OIDC 自动完成，仓库里没有 `NPM_TOKEN`。
