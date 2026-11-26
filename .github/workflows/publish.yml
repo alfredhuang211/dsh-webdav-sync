@@ -31,15 +31,21 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Node 24, not 22: OIDC trusted publishing needs npm >= 11.5.1, and Node 22
+      # ships npm 10.x, which would never attempt the OIDC exchange.
+      #
+      # No `registry-url` on purpose. Setting it makes setup-node write
+      # `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}` into the runner's
+      # .npmrc and export GITHUB_TOKEN in its place; npm then sees a credential
+      # and never tries OIDC, which the registry rejects as a misleading
+      # `E404 Not Found - PUT ...` — even though provenance signed fine.
       - uses: actions/setup-node@v6
         with:
-          # The package requires Node >=22.19.0; 22 is the floor it declares.
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '24'
           # setup-node enables caching automatically when package.json names npm
           # as packageManager; this input turns that off. Never reuse a
           # dependency cache in a release build: a poisoned or stale cache would
-          # end up inside a published artifact. Requires setup-node v6+.
+          # end up inside a published artifact.
           package-manager-cache: false
 
       - name: Install
@@ -67,6 +73,22 @@ jobs:
 
       # OIDC: npm exchanges the GitHub-issued identity token for a short-lived
       # publish token. No NPM_TOKEN secret is read here, and none should be set.
+      # Refuse to publish with a stale credential present: npm prefers any
+      # `_authToken`/`NODE_AUTH_TOKEN` over the OIDC exchange, and the failure it
+      # produces (`E404 on PUT`) names neither the token nor the variable.
+      - name: Assert no static npm credential is present
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if [ -n "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::NODE_AUTH_TOKEN is set; npm would use it instead of OIDC"
+            exit 1
+          fi
+          if grep -q "_authToken" "$HOME/.npmrc" 2>/dev/null; then
+            echo "::error::~/.npmrc carries an _authToken; npm would use it instead of OIDC"
+            exit 1
+          fi
+          echo "No static credential present; npm will use OIDC"
+
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
         run: npm publish --access public --provenance
