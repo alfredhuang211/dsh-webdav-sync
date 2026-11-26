@@ -1,6 +1,6 @@
 {
   "name": "@alfredhuang211/dsh-webdav-sync",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "packageManager": "npm@>=10",
   "description": "DeepSeek Harness 插件：把会话日志备份到任意 WebDAV 服务，并可从 WebDAV 恢复。",
   "keywords": [
