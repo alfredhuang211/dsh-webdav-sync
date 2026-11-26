@@ -8,4 +8,4 @@
 # 用户在设置页的改动会被宿主写回 profile 的 cordis.patch.yml。
 - insert:
     - id: webdav-sync
-      name: 'dsh-webdav-sync'
+      name: '@alfredhuang211/dsh-webdav-sync'

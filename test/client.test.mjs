@@ -39,7 +39,7 @@ test('client bundle 自注册并导出可用的 apply', async () => {
 
   assert.equal(loaded.length, 1)
   const entry = loaded[0]
-  assert.equal(entry.id, 'dsh-webdav-sync')
+  assert.equal(entry.id, '@alfredhuang211/dsh-webdav-sync')
   assert.equal(typeof entry.factory, 'function')
 
   const mod = entry.factory((specifier) => {

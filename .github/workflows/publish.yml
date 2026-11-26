@@ -1,0 +1,97 @@
+name: publish
+
+# Publishing runs from a tag, never from a branch push: the tag is the decision,
+# and the workflow only carries it out. `v*` matches this repository's tag
+# convention.
+on:
+  push:
+    tags:
+      - 'v*'
+  # A manual run that publishes nothing, to check the pipeline after a
+  # dependency or workflow change.
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Only build and pack; do not publish'
+        type: boolean
+        default: true
+
+# Trusted publishing (OIDC) needs `id-token: write`; nothing else is written.
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # The package requires Node >=22.19.0; 22 is the floor it declares.
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          # Never reuse a dependency cache in a release build: a poisoned or
+          # stale cache would end up inside a published artifact.
+          package-manager-cache: false
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      # `npm pack` runs `prepack` (a full clean rebuild) and proves the tarball
+      # is producible before anything is published, so a stale committed `lib/`
+      # can never reach the registry unnoticed.
+      - name: Pack
+        run: npm pack --dry-run
+
+      - name: Check the tag matches the manifest version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          manifest="$(node -p "require('./package.json').version")"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$manifest" != "$tag" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $manifest"
+            exit 1
+          fi
+          echo "Tag and manifest agree on $manifest"
+
+      # OIDC: npm exchanges the GitHub-issued identity token for a short-lived
+      # publish token. No NPM_TOKEN secret is read here, and none should be set.
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: npm publish --access public --provenance
+
+      - name: Publish (dry run requested)
+        if: github.event_name == 'workflow_dispatch' && inputs.dry-run
+        run: |
+          echo "Dry run: skipping publish. The pack step above proved the tarball builds."
+
+      - name: Verify the release is installable
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          name="$(node -p "require('./package.json').name")"
+          version="$(node -p "require('./package.json').version")"
+          base="${name##*/}"
+          # npm registers the version before its tarball is servable (observed:
+          # 1.5–6 minutes). Poll until the artifact downloads, because that HTTP
+          # status is what consumers actually hit.
+          for attempt in $(seq 1 40); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' \
+              "https://registry.npmjs.org/${name}/-/${base}-${version}.tgz" || true)"
+            if [ "$code" = "200" ]; then
+              echo "::notice::$name@$version is installable"
+              exit 0
+            fi
+            echo "attempt $attempt: tarball HTTP $code; waiting"
+            sleep 15
+          done
+          echo "::error::$name@$version was published but its tarball never became available"
+          exit 1

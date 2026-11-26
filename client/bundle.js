@@ -13,7 +13,7 @@
  * 构建脚本把产物包成同样的 factory 外壳即可。
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-webdav-sync',
+  id: '@alfredhuang211/dsh-webdav-sync',
   factory: (require) => {
     var module = { exports: {} }
     var exports = module.exports

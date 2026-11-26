@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "WebDAV backup",
+    "description": "Back up session logs and the plugin environment to any WebDAV server, with per-file revisions, device provenance and generation numbering, then restore sessions or the whole environment from it. node_modules is never uploaded; it is reinstalled instead."
+  }
+}
