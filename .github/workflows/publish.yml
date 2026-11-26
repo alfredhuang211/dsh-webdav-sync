@@ -29,15 +29,17 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           # The package requires Node >=22.19.0; 22 is the floor it declares.
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
-          # Never reuse a dependency cache in a release build: a poisoned or
-          # stale cache would end up inside a published artifact.
+          # setup-node enables caching automatically when package.json names npm
+          # as packageManager; this input turns that off. Never reuse a
+          # dependency cache in a release build: a poisoned or stale cache would
+          # end up inside a published artifact. Requires setup-node v6+.
           package-manager-cache: false
 
       - name: Install
